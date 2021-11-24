@@ -1,5 +1,9 @@
 data/
 queries/
+
+.ipynb_checkpoints/
 ffmpeg/
+__pycache__/
 
 
+.DS_Store
