@@ -64,6 +64,8 @@ def plot_spectrogram_and_picks(track:np.ndarray, sr:int, peaks:np.ndarray, onset
     plt.axis('tight')
     plt.tight_layout()
     plt.show()
+    
+    return
 
 def load_audio_picks(audio, duration, hop_size):
     """[summary]
