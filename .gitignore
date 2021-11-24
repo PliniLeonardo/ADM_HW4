@@ -1,6 +1,6 @@
 data/
 queries/
-.ipynb_checkpoints/
 ffmpeg/
+.ipynb_checkpoints/
 
 .DS_Store
