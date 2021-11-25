@@ -11,7 +11,7 @@ from tqdm.notebook import tqdm
 
 
 '''
-Library of utility functions from AudioSignals.ipynb
+Library of utility functions from AudioSignals.ipynb, plus some add-ons
 '''
 
 N_TRACKS = 1413
@@ -38,12 +38,12 @@ def convert_mp3_to_wav(audio:str) -> str:
     
     return audio
 
-def plot_spectrogram_and_picks(track:np.ndarray, sr:int, peaks:np.ndarray, onset_env:np.ndarray) -> None:
-    """[summary]
+def plot_spectrogram_and_peaks(track:np.ndarray, sr:int, peaks:np.ndarray, onset_env:np.ndarray) -> None:
+    """Plots the spectrogram and peaks 
 
     Args:
         track (np.ndarray): A track.
-        sr (int): Sampling rate.
+        sr (int): Aampling rate.
         peaks (np.ndarray): Indices of peaks in the track.
         onset_env (np.ndarray): Vector containing the onset strength envelope.
     """
@@ -64,23 +64,22 @@ def plot_spectrogram_and_picks(track:np.ndarray, sr:int, peaks:np.ndarray, onset
     plt.axis('tight')
     plt.tight_layout()
     plt.show()
-    
-    return
 
-def load_audio_picks(audio, duration, hop_size):
-    """[summary]
+def load_audio_peaks(audio, offset, duration, hop_size):
+    """Load the tracks and peaks of an audio.
 
     Args:
         audio (string, int, pathlib.Path or file-like object): [description]
-        duration (int): [description]
-        hop_size (int): 
+        offset (float): start reading after this time (in seconds)
+        duration (float): only load up to this much audio (in seconds)
+        hop_size (int): the hop_length
 
     Returns:
         tuple: Returns the audio time series (track) and sampling rate (sr), a vector containing the onset strength envelope
         (onset_env), and the indices of peaks in track (peaks).
     """
     try:
-        track, sr = librosa.load(audio, duration=duration)
+        track, sr = librosa.load(audio, offset=offset, duration=duration)
         onset_env = librosa.onset.onset_strength(track, sr=sr, hop_length=hop_size)
         peaks = librosa.util.peak_pick(onset_env, 10, 10, 10, 10, 0.5, 0.5)
     except Error as e:
@@ -103,12 +102,48 @@ def track_conversion():
     return
 
 
-def retrieve_tracks():
+def retrieve_track_paths():
     '''
-    retrieves the directories of the wav tracks
+    returns a list that contains all the track paths
     '''
     
-    data_folder = Path("data/mp3s-32k/")
-    tracks = data_folder.glob("*/*/*.wav")
+    # we read the track paths from the all.list file in the dataset
+    with open("data/mp3s-32k/all.list", "r") as file:
+        all_paths = file.readlines()
     
-    return tracks
+    # we add the parent path to get to the current directory
+    for i, path in enumerate(all_paths):
+        all_paths[i] = "data/mp3s-32k/" + path.strip() + '.wav'
+    
+    return(all_paths)
+
+
+def retrieve_track_vocabulary():
+    '''
+    returns a list that contains all the track names
+    '''
+    
+    # we get the names from the paths
+    with open("data/mp3s-32k/all.list", "r") as file:
+        paths = file.readlines()
+    
+    names = []
+    for path in paths:
+        names.append(path.strip().split('/')[-1])
+    
+    return(names)
+
+
+def indexed_plot_spectrogram_and_peaks(idx, offset = OFFSET, duration = DURATION):
+    '''
+    plots the spectrogram for the i^th track (according to the all.list ordering)
+    NOTE: idx goes from 0 to N_TRACKS-1
+    '''
+    
+    paths = retrieve_track_paths()
+    
+    audio = paths[idx]
+    track, sr, onset_env, peaks = load_audio_peaks(audio, offset, duration, HOP_SIZE)
+    plot_spectrogram_and_peaks(track, sr, peaks, onset_env)
+    
+    return
