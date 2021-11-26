@@ -9,6 +9,7 @@ import IPython.display as ipd
 from pathlib import Path, PurePath   
 from tqdm.notebook import tqdm
 
+import pickle
 
 '''
 Library of utility functions from AudioSignals.ipynb, plus some add-ons
@@ -108,12 +109,12 @@ def retrieve_track_paths():
     '''
     
     # we read the track paths from the all.list file in the dataset
-    with open("data/mp3s-32k/all.list", "r") as file:
+    with open("data/wav_list.txt", "r") as file:
         all_paths = file.readlines()
     
     # we add the parent path to get to the current directory
     for i, path in enumerate(all_paths):
-        all_paths[i] = "data/mp3s-32k/" + path.strip() + '.wav'
+        all_paths[i] = path.strip()
     
     return(all_paths)
 
@@ -124,14 +125,29 @@ def retrieve_track_vocabulary():
     '''
     
     # we get the names from the paths
-    with open("data/mp3s-32k/all.list", "r") as file:
-        paths = file.readlines()
+    paths = retrieve_track_paths()
     
     names = []
     for path in paths:
-        names.append(path.strip().split('/')[-1])
+        names.append(path.split('/')[-1])
     
     return(names)
+
+
+def create_wav_list():
+    '''
+    create the list of all wav files path and saves it into a file
+    '''
+    
+    data_folder = Path("data/mp3s-32k/")
+    tracks = data_folder.glob("*/*/*.wav")
+    tracks = list(map(str, tracks))
+    
+    with open("data/wav_list.txt", "w") as wav_file:
+        for path in tracks:
+            wav_file.write(path + '\n')
+    
+    return
 
 
 def indexed_plot_spectrogram_and_peaks(idx, offset = OFFSET, duration = DURATION):
@@ -147,3 +163,128 @@ def indexed_plot_spectrogram_and_peaks(idx, offset = OFFSET, duration = DURATION
     plot_spectrogram_and_peaks(track, sr, peaks, onset_env)
     
     return
+
+
+def bins_to_time(bins, sr = 22050, hop_length = HOP_SIZE):
+    '''
+    convert a series of bin numbers to time (in seconds)
+    '''
+    
+    times = librosa.frames_to_time(bins, sr = sr, hop_length = hop_length)
+    
+    return(times)
+    
+    
+def bins_to_freq(bins = None, sr = 22050, n_fft = 2048):
+    '''
+    convert a series of bin numbers to frequencies
+    '''
+    
+    freq = librosa.fft_frequencies(sr = sr, n_fft = n_fft)
+    
+    return(freq)
+
+
+def generate_peak_triplets():
+    '''
+    here we generate the peak triplets for each track and the associated dictionary
+    and we save them in two files
+    '''
+    
+    track_paths = retrieve_track_paths()
+    
+    triplet_dict = {}
+    total_number_of_triplets = 0
+    
+    triplets_list = []
+    
+    for idx, audio in tqdm(enumerate(track_paths), total = N_TRACKS):
+        
+        # load the track in memory
+        track, sr = librosa.load(audio, offset=OFFSET, duration=DURATION)
+        
+        # analyze the structure of the song
+        onset_env = librosa.onset.onset_strength(track, sr=sr, hop_length = HOP_SIZE)
+        
+        
+        # retrieve the peak indices (these corresponds to the time bins of the peaks)
+        peaks = librosa.util.peak_pick(onset_env, 10, 10, 10, 10, 0.5, 0.5)
+        
+        
+        # generate the STFT matrix
+        D = librosa.stft(track)
+        
+        # select only the peaks
+        D = D[:,peaks]
+        
+        # select the intensity of every element
+        D = np.abs(D)
+        
+        # retrieve the frequency associated to the maximum
+        freq = np.argmax(D, axis = 0)
+        
+        
+        # generate the triplets
+        track_triplets = generate_triplets(peaks, freq)
+        
+        # create the dictionary of triplets
+        for idx, triplet in enumerate(track_triplets):
+            if triplet not in triplet_dict.keys():
+                triplet_dict[triplet] = total_number_of_triplets
+                total_number_of_triplets += 1
+            
+            track_triplets[idx] = triplet_dict[triplet]
+        
+        
+        triplets_list.append(track_triplets)
+    
+    
+    
+    # Store shingles list
+    with open('data/shingles_list.pickle', 'wb') as handle:
+        pickle.dump(triplets_list, handle)
+    
+    # Store shingles dictionary
+    with open('data/shingles_dictionary.pickle', 'wb') as handle:
+        pickle.dump(triplet_dict, handle)
+    
+    
+    return
+
+
+def generate_triplets(peaks, freq):
+    '''
+    generate the track triplets starting from the time and frequency bin indices
+    '''
+    
+    track_triplets = []
+    for i in range(len(freq)-1):
+        current_freq = freq[i]
+        next_freq = freq[i+1]
+        time_diff = peaks[i+1] - peaks[i]
+        
+        track_triplets.append((current_freq, time_diff, next_freq))
+    
+    return(track_triplets)
+    
+    
+def load_shingles_list():
+    '''
+    loads the shingles list in memory
+    '''
+    # Load data (deserialize)
+    with open('data/shingles_list.pickle', 'rb') as handle:
+        shingles_list = pickle.load(handle)
+    
+    return(shingles_list)
+
+
+def load_shingles_dictionary():
+    '''
+    loads the shingles list in memory
+    '''
+    # Load data (deserialize)
+    with open('data/shingles_dictionary.pickle', 'rb') as handle:
+        shingles_dictionary = pickle.load(handle)
+    
+    return(shingles_dictionary)
