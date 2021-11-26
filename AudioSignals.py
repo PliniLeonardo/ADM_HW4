@@ -129,7 +129,9 @@ def retrieve_track_vocabulary():
     
     names = []
     for path in paths:
-        names.append(path.split('/')[-1])
+        filename = path.split('/')[-1]
+        song_name = filename[3:-4]
+        names.append(song_name)
     
     return(names)
 
