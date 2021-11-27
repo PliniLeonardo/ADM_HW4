@@ -1,4 +1,5 @@
 data/mp3s-32k/
+data/datasets/
 queries/
 
 .ipynb_checkpoints/
