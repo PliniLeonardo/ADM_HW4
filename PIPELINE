@@ -1,9 +1,0 @@
-1. make a dictionary with keys= S_i and values= Song name         DONE
-2. considering the triplets (peak_i, intervall of time (peak_i,peak_i+1),peak_i+1)         DONE   
-3. using a dictionary with keys= triplet and values= D_i          DONE
-4. compile the matrix with 0 and 1 according to the fact that the i-th triplet appears in j-th song D
-5. MINHASH: we use 100 hashfunction to start DONE
-6. Create a signature matrix DONE
-7. ? speeding up minhashing ?
-8. minhashing of query
-9. using jaccard similarity to compare the query to the elements of the database and retrieve songs according to the similarity

@@ -18,9 +18,11 @@ Library of utility functions from AudioSignals.ipynb, plus some add-ons
 N_TRACKS = 1413
 HOP_SIZE = 512
 OFFSET = 1.0
-DURATION = 30 # TODO: to be tuned!
-THRESHOLD = 0 # TODO: to be tuned!
+DURATION = 30
 
+###################################################################################################################################################
+
+# Functions from AudioSignals.ipynb
 
 def convert_mp3_to_wav(audio:str) -> str:  
     """Convert an input MP3 audio track into a WAV file.
@@ -102,6 +104,10 @@ def track_conversion():
     
     return
 
+###################################################################################################################################################
+
+
+# Add-ons
 
 def retrieve_track_paths():
     '''
