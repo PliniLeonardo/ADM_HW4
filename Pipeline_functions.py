@@ -1,3 +1,26 @@
+import pandas as pd
+import numpy as np      
+import matplotlib.pyplot as plt 
+import scipy.io.wavfile 
+import subprocess
+import librosa
+import librosa.display
+import IPython.display as ipd
+from IPython.core.display import HTML
+import pickle
+
+from pathlib import Path, PurePath   
+from tqdm.notebook import tqdm
+
+from AudioSignals import *
+from minhashing import *
+
+
+
+
+
+
+
 # Part 1-3
 def dictionary_songs_json():
     '''
@@ -49,12 +72,12 @@ def create_matrix(shingles_list):
 
 N_SHINGLES = 40318
 
-# cardinality is the number of the hashfunctions we want to generate 
-cardinality=100
+# CARDINALITY is the number of the hashfunctions we want to generate 
+CARDINALITY=100
 N_PRIME = 40343 #first prime number after 40318
 N_PRIME = 40993 # nearest prime to 41000
 
-def hashfunction_family(number_of_hashfunctions = cardinality):
+def hashfunction_family(number_of_hashfunctions = CARDINALITY):
     '''
     create a family of #number_of_hashfunctions hashfunctions
 
@@ -149,9 +172,9 @@ def minhash_function(track_triplets, parameters):
     # h(x) = (alpha*x + beta) mod N_PRIME
     
     # explicitly broadcasting the arrays to leverage numpy vectorization
-    a = np.broadcast_to(alpha[np.newaxis, :], (number_query_words, cardinality))
-    x = np.broadcast_to(track_triplets[:, np.newaxis], (number_query_words, cardinality))
-    b = np.broadcast_to(beta[np.newaxis, :], (number_query_words, cardinality))
+    a = np.broadcast_to(alpha[np.newaxis, :], (number_query_words, CARDINALITY))
+    x = np.broadcast_to(track_triplets[:, np.newaxis], (number_query_words, CARDINALITY))
+    b = np.broadcast_to(beta[np.newaxis, :], (number_query_words, CARDINALITY))
     
     # calculating the hashing functions
     hash_results = np.mod(a*x + b, N_PRIME)
@@ -174,9 +197,11 @@ def search(query_path):
     for path in query_path:
         minhashed_query = minhash_query(path)
         
-        similarities = minhashed_jaccard_similarity(minhashed_query, signature_matrix)
+        similar_pairs = retrieve_similar_pairs()
         
-        best_current_match = np.argmax(similarities)
+        similarities = minhashed_jaccard_similarity(minhashed_query, signature_matrix[:, similar_pairs])
+        
+        best_current_match = similar_pairs[np.argmax(similarities)]
         best_current_match = song_vocabulary[best_current_match]
         
         best_matches.append(best_current_match)

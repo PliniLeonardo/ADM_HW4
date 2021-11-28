@@ -20,7 +20,7 @@ def generate_hash_parameters(n, number_addings):
     
     params = np.random.randint(0, n, number_addings)
     
-    return (n, params)
+    return (params, n)
 
 
 def retrieve_hash_function(parameters):
