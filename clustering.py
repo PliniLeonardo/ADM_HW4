@@ -267,12 +267,12 @@ def features_3dplot_comparison(X, K, custom_labels, plus_plus_labels):
     fig, ax = plt.subplots(1,2,figsize = (18,10), subplot_kw=dict(projection="3d"))
 
     for i in range(K):
-        custom_x = X[custom_labels == i]['audio_feature_0']
-        custom_y = X[custom_labels == i]['audio_feature_1']
+        custom_y = X[custom_labels == i]['audio_feature_0']
+        custom_x = X[custom_labels == i]['audio_feature_1']
         custom_z = X[custom_labels == i]['audio_feature_2']
 
-        plus_plus_x = X[plus_plus_labels == i]['audio_feature_0']
-        plus_plus_y = X[plus_plus_labels == i]['audio_feature_1']
+        plus_plus_y = X[plus_plus_labels == i]['audio_feature_0']
+        plus_plus_x = X[plus_plus_labels == i]['audio_feature_1']
         plus_plus_z = X[plus_plus_labels == i]['audio_feature_2']
 
         ax[0].scatter(custom_x, custom_y, custom_z, s = 20)
